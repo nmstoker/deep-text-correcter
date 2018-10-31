@@ -1,9 +1,9 @@
 """Program used to create, train, and evaluate "text correcting" models.
 
 Defines utilities that allow for:
-1. Creating a TextCorrecterModel
-2. Training a TextCorrecterModel using a given DataReader (i.e. a data source)
-3. Decoding predictions from a trained TextCorrecterModel
+1. Creating a TextCorrectorModel
+2. Training a TextCorrectorModel using a given DataReader (i.e. a data source)
+3. Decoding predictions from a trained TextCorrectorModel
 
 The program is best run from the command line using the flags defined below or
 through an IPython notebook.
@@ -21,14 +21,13 @@ import sys
 import time
 from collections import defaultdict
 
-import nltk
 import numpy as np
 import tensorflow as tf
 
 from data_reader import EOS_ID
-from text_correcter_data_readers import MovieDialogReader, PTBDataReader
+from text_corrector_data_readers import MovieDialogReader, PTBDataReader
 
-from text_correcter_models import TextCorrecterModel
+from text_corrector_models import TextCorrectorModel
 
 tf.app.flags.DEFINE_string("config", "TestConfig", "Name of config to use.")
 tf.app.flags.DEFINE_string("data_reader_type", "MovieDialogReader",
@@ -96,7 +95,7 @@ class DefaultMovieDialogConfig():
     max_vocabulary_size = 2000
 
     size = 512
-    num_layers = 2
+    num_layers = 4
     max_gradient_norm = 5.0
     batch_size = 64
     learning_rate = 0.5
@@ -110,7 +109,7 @@ class DefaultMovieDialogConfig():
 
 def create_model(session, forward_only, model_path, config=TestConfig()):
     """Create translation model and initialize or load parameters in session."""
-    model = TextCorrecterModel(
+    model = TextCorrectorModel(
         config.max_vocabulary_size,
         config.max_vocabulary_size,
         config.buckets,
@@ -326,6 +325,8 @@ def decode_sentence(sess, model, data_reader, sentence, corrective_tokens=set(),
 def evaluate_accuracy(sess, model, data_reader, corrective_tokens, test_path,
                       max_samples=None):
     """Evaluates the accuracy and BLEU score of the given model."""
+
+    import nltk  # Loading here to avoid having to bundle it in lambda.
 
     # Build a collection of "baseline" and model-based hypotheses, where the
     # baseline is just the (potentially errant) source sequence.
